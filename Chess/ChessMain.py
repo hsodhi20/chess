@@ -30,7 +30,7 @@ def drawPieces(screen, board):
     for row in range(DIMENSION):
         for col in range(DIMENSION):
             piece = board[row][col]
-            if piece != "--":
+            if piece != "--": #not empty square
                 screen.blit(IMAGES[piece], p.Rect(col * SQ_SIZE, row * SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
 def main():
@@ -41,10 +41,28 @@ def main():
     gs = ChessEngine.GameState()
     loadImages()
     running = True
+    sqSelected =() #no square is selected , keep track of the last click of user (tuple : (rew, col))
+    playerClicks = [] #keep track of player clicks ( two tuples)
     while running:
         for e in p.event.get():
             if e.type == p.QUIT:
                 running = False
+            elif e.type == p.MOUSEBUTTONDOWN:
+                location = p.mouse.get_pos()# (x,y) location of mouse
+                col = location[0] // SQ_SIZE
+                row = location[1] // SQ_SIZE
+                if sqSelected == (row, col):
+                    sqSelected = () #deselect
+                    playerClicks = [] #clear player clicks
+                else:
+                    sqSelected = (row, col)
+                    playerClicks.append(sqSelected) #append for both 1st and 2nd clicks
+                if(len(playerClicks) == 2):
+                    move = ChessEngine.Move(playerClicks[0],playerClicks[1],gs.board)
+                    print(move.getChessNotation())
+                    gs.makeMove(move)
+                    sqSelected = () #reset user clicks
+                    playerClicks = []
         clock.tick(MAX_FPS)
         drawGameState(screen, gs)
         p.display.flip()
